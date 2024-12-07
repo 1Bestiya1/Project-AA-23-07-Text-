@@ -3,61 +3,34 @@
 #include <map>
 #include <sstream>
 #include <fstream>
+#include <vector>
 using namespace std;
 
-//Простейший пример блочного шифрования,с использованием азбуки Морзе:
-const int BLOCK_SIZE = 5; // Определим размер блока в символах Морзе
 
-map<char, string> MorseCode() {
-    return {
-        {'A', ".-"}, {'B', "-..."}, {'C', "-.-."}, {'D', "-.."}, {'E', "."},
-        {'F', "..-."}, {'G', "--."}, {'H', "...."}, {'I', ".."}, {'J', ".---"},
-        {'K', "-.-"}, {'L', ".-.."}, {'M', "--"}, {'N', "-."}, {'O', "---"},
-        {'P', ".--."}, {'Q', "--.-"}, {'R', ".-."}, {'S', "..."}, {'T', "-"},
-        {'U', "..-"}, {'V', "...-"}, {'W', ".--"}, {'X', "-..-"}, {'Y', "-.--"},
-        {'Z', "--.."},
 
-        {'0', "-----"}, {'1', ".----"}, {'2', "..---"}, {'3', "...--"}, {'4', "....-"},
-        {'5', "....."}, {'6', "-...."}, {'7', "--..."}, {'8', "---.."}, {'9', "----."},
+string encrypt(const std::string& input, int key) {
+    // Определяем количество строк
+    int rows = (input.size() + key - 1) / key; // Округление вверх
+    std::vector<std::string> grid(rows, std::string(key, ' '));
 
-        {' ', "!"}
-    };
-}
+    // Заполняем сетку
+    for (size_t i = 0; i < input.size(); ++i) {
+        grid[i / key][i % key] = input[i];
+    }
 
-string MorseBlock(const string& text) {
-    map<char, string> morseCode = MorseCode();
-    stringstream morseStream;
-    string currentBlock;
-    int currentLength = 0;
-
-    for (char ch : text) {
-        ch = toupper(ch);
-        if (morseCode.find(ch) != morseCode.end()) {
-            string morseSymbol = morseCode[ch]; // Извлекаем код Морзе
-            int symbolLength = morseSymbol.length();
-
-            // Проверка, помещается ли текущий символ в блок
-            if (currentLength + symbolLength > BLOCK_SIZE) {
-                // Если текущий блок полон, добавляем его в результирующий поток
-                morseStream << currentBlock << "|"; // Добавляем текущий блок
-                // Начинаем новый блок
-                currentBlock = morseSymbol;
-                currentLength = symbolLength; // Обновляем длину блока
-            }
-            else {
-                currentBlock += morseSymbol; // Добавляем код в текущий блок
-                currentLength += symbolLength; // Обновляем текущую длину блока
+    // Читаем по столбцам
+    std::string output;
+    for (int col = 0; col < key; ++col) {
+        for (int row = 0; row < rows; ++row) {
+            if (grid[row][col] != ' ') { // Пропускаем пустые символы
+                output += grid[row][col];
             }
         }
     }
 
-    // Если остались какие-то символы в текущем блоке, добавляем их в результат
-    if (!currentBlock.empty()) {
-        morseStream << currentBlock; // Добавляем все оставшиеся символы
-    }
-
-    return morseStream.str();
+    return output; // Возвращаем зашифрованный текст
 }
+
 
 int main() {
     string filename;
@@ -73,7 +46,7 @@ int main() {
 
     string line;
     while (getline(inputFile, line)) { // Читаем файл построчно
-        string morseText = MorseBlock(line); // Шифруем
+        string morseText = encrypt(line, 2); // Шифруем
         cout << "Source: " << line << endl; // Исходный текст:
         cout << "Encrypted text in Morse code: " << morseText << endl; // Зашифрованный текст:
     }

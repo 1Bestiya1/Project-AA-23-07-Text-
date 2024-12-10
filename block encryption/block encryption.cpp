@@ -113,7 +113,7 @@ void DisplayMenu() { // создаем меню для выбора действ
     cout << "__________________(-_-)_/_________________" << endl;
     cout << "                   Menu:          " << endl;
     cout << " 0) Exit the program           " << endl;
-    cout << " 1) Mamaev                   " << endl;
+    cout << " 1) The transposition cipher                   " << endl;
     cout << " 2) Saburova                  " << endl;
     cout << " 3) Volkova                   " << endl;
     cout << " 4) Shklyaeva                   " << endl;

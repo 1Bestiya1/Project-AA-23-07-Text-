@@ -5,7 +5,108 @@
 #include <sstream>
 #include <fstream>
 #include <chrono>
+
 using namespace std;
+
+
+// ШИФР ХИЛЛА
+// Создаем алфавит.
+// Длина алфавита - простое число, что удобно, т.к. детерминант ключа и длина алфавита должны быть взаимно простыми.
+map<char, int> Hill_Cipher_Alphabet() {
+    return {
+        {'A', 0}, {'B', 1}, {'C', 2}, {'D', 3}, {'E', 4},
+        {'F', 5}, {'G', 6}, {'H', 7}, {'I', 8}, {'J', 9},
+        {'K', 10}, {'L', 11}, {'M', 12}, {'N', 13}, {'O', 14},
+        {'P', 15}, {'Q', 16}, {'R', 17}, {'S', 18}, {'T', 19},
+        {'U', 20}, {'V', 21}, {'W', 22}, {'X', 23}, {'Y', 24},
+        {'Z', 25},
+        {'0', 26}, {'1', 27}, {'2', 28}, {'3', 29}, {'4', 30},
+        {'5', 31}, {'6', 32}, {'7', 33}, {'8', 34}, {'9', 35},
+        {' ', 36}
+    };
+}
+
+// Алфавит для обратного преобразования.
+map<int, char> Alphabet() {
+    return {
+        {0, 'A'}, {1, 'B'}, {2, 'C'}, {3, 'D'}, {4, 'E'},
+        {5, 'F'}, {6, 'G'}, {7, 'H'}, {8, 'I'}, {9, 'J'},
+        {10, 'K'}, {11, 'L'}, {12, 'M'}, {13, 'N'}, {14, 'O'},
+        {15, 'P'}, {16, 'Q'}, {17, 'R'}, {18, 'S'}, {19, 'T'},
+        {20, 'U'}, {21, 'V'}, {22, 'W'}, {23, 'X'}, {24, 'Y'},
+        {25, 'Z'},
+        {26, '0'}, {27, '1'}, {28, '2'}, {29, '3'}, {30, '4'},
+        {31, '5'}, {32, '6'}, {33, '7'}, {34, '8'}, {35, '9'},
+        {36, ' '}
+    };
+}
+
+string volkova(vector<string> text, int key[5][5]) {
+    const int block_size = 5;
+    map<char, int> HillAlphabet = Hill_Cipher_Alphabet();
+    map<int, char> Alph = Alphabet();
+    vector<string> blocks;
+    string result;
+    int current_length = 0;
+    string current_block = "";
+
+    for (const string& str : text) {
+        for (char symbol : str) {
+            symbol = toupper(symbol);
+
+            // Деление текста на блоки:
+            if (current_length == block_size) {
+                blocks.push_back(current_block);
+                current_block = symbol;
+                current_length = 1;
+            }
+            else {
+                current_block += symbol;
+                current_length += 1;
+            }
+        }
+
+        // Если остался не заполненный до конца блок, добавляем пробелы.
+        if (!current_block.empty()) {
+            int r = block_size - (str.length() % block_size);
+            for (int k = 0; k < r; k++) {
+                current_block += " ";
+            }
+            blocks.push_back(current_block);
+        }
+
+        // Шифрование каждого блока:
+        for (string block : blocks) {
+            // Преобразуем блок в вектор:
+            vector<int> block_vector;
+            for (int j = 0; j < block.size(); j++) {
+                int int_symbol = HillAlphabet[block[j]];
+                block_vector.push_back(int_symbol);
+            }
+
+            // Умножаем вектор на матрицу-ключ:
+            vector<int> res_vector = { 0,0,0,0,0 };
+            for (int i = 0; i < 5; i++) {
+                for (int p = 0; p < 5; p++) {
+                    res_vector[i] += block_vector[p] * key[p][i];
+                }
+            }
+
+            // Берем остаток от деления матрицы на 37 (длина алфавита):
+            for (int i = 0; i < 5; i++) {
+                res_vector[i] = res_vector[i] % 37;
+            }
+
+            // Декодируем полученный вектор:
+            for (int i = 0; i < 5; i++) {
+                result += Alph[res_vector[i]];
+            }
+        }
+    }
+
+    return result; // Возвращаем результат.
+}
+
 
 // Простейший пример блочного шифрования (его удаляем):
 const int BLOCK_SIZE = 5; // Определим размер блока. Каждый в своем методе сам прописывает input для количества блоков
@@ -125,7 +226,7 @@ void DisplayMenu() { // создаем меню для выбора действ
     cout << " 0) Exit the program           " << endl;
     cout << " 1) The transposition cipher                   " << endl;
     cout << " 2) Saburova                  " << endl;
-    cout << " 3) Volkova                   " << endl;
+    cout << " 3) Hill cipher                   " << endl;
     cout << " 4) Shklyaeva                   " << endl;
     cout << " 5) Govorukhina                   " << endl;
     cout << "__________________(~_~)_/_________________" << endl;
@@ -139,6 +240,15 @@ int main() {
     int dataSize = 0;
     vector<string> results;
     vector<string> text;
+
+    // ШИФР ХИЛЛА. Ключ:
+    int hill_key[5][5] = {
+        {1,1,2,3,4},
+        {3,1,7,3,1},
+        {1,8,2,6,4},
+        {9,1,6,3,2},
+        {4,9,2,6,4}
+    };
 
     cout << "Enter file name, necessarily with .txt: "; // обязательно с указанием расширения .txt, также файл должен находиться в папке проекта
     getline(cin, filename);
@@ -164,7 +274,7 @@ int main() {
     auto lag2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
 
     auto start3 = chrono::high_resolution_clock::now();
-    /*Volkova(text)*/; // поменять название функции и разкоментить, text оставить
+    volkova(text, hill_key); 
     auto end3 = chrono::high_resolution_clock::now();
     auto lag3 = chrono::duration_cast<chrono::milliseconds>(end3 - start3).count();
 
@@ -219,7 +329,7 @@ int main() {
             }
             break;
         case 3:
-            /*Volkova(text);*/ // поменять название функции и разкоментить, text оставить
+            volkova(text, hill_key);
 
             cout << "Source: "; // это выводит изначальный текст
             for (size_t i = 0; i < text.size(); ++i) {
@@ -230,7 +340,8 @@ int main() {
             }
             cout << endl;
 
-            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст, поменять название функции
+            cout << "Block size: 5" << endl; 
+            cout << "Encrypted text in Hill cipher: " << volkova(text, hill_key) << endl;
 
             results.push_back("File: " + filename + " Encrypting time: " + to_string(lag3) + " ms");
             for (const auto& result : results) {

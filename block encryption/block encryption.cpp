@@ -4,7 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
-#include <chrono> //время считывания данных из файла и время работы алгоритма с указанием размера входных данных
+#include <chrono>
 using namespace std;
 
 //Простейший пример блочного шифрования(его удаляем):

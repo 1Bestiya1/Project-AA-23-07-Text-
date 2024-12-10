@@ -340,6 +340,7 @@ int main() {
             }
             cout << endl;
 
+            cout << "Block size: 5" << endl; 
             cout << "Encrypted text in Hill cipher: " << volkova(text, hill_key) << endl;
 
             results.push_back("File: " + filename + " Encrypting time: " + to_string(lag3) + " ms");

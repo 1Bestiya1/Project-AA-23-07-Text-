@@ -1,10 +1,13 @@
 ﻿#include <iostream>
 #include <string>
 #include <map>
+#include <vector>
 #include <sstream>
 #include <fstream>
-#include <vector>
+#include <chrono>
+
 using namespace std;
+
 
 // ШИФР ХИЛЛА
 // Создаем алфавит.
@@ -38,7 +41,7 @@ map<int, char> Alphabet() {
     };
 }
 
-string block_encryption_HillCipher(const string& text, int key[5][5]) {
+string volkova(vector<string> text, int key[5][5]) {
     const int block_size = 5;
     map<char, int> HillAlphabet = Hill_Cipher_Alphabet();
     map<int, char> Alph = Alphabet();
@@ -47,65 +50,120 @@ string block_encryption_HillCipher(const string& text, int key[5][5]) {
     int current_length = 0;
     string current_block = "";
 
-    for (char symbol : text) {
-        symbol = toupper(symbol);
+    for (const string& str : text) {
+        for (char symbol : str) {
+            symbol = toupper(symbol);
 
-        // Деление текста на блоки:
-        if (current_length == block_size) {
-            blocks.push_back(current_block);
-            current_block = symbol;
-            current_length = 1;
-        }
-        else {
-            current_block += symbol;
-            current_length += 1;
-        }
-    }
-
-    // Если остался не заполненный до конца блок, добавляем пробелы.
-    if (!current_block.empty()) {
-        int r = block_size - (text.length() % block_size);
-        for (int k = 0; k < r; k++) {
-            current_block += " ";
-        }
-        blocks.push_back(current_block);
-    }
-
-    // Шифрование каждого блока:
-    for (string block : blocks) {
-        // Преобразуем блок в вектор:
-        vector<int> block_vector;
-        for (int j = 0; j < block.size(); j++) {
-            int int_symbol = HillAlphabet[block[j]];
-            block_vector.push_back(int_symbol);
-        }
-
-        // Умножаем вектор на матрицу-ключ:
-        vector<int> res_vector = { 0,0,0,0,0 };
-        for (int i = 0; i < 5; i++) {
-            for (int p = 0; p < 5; p++) {
-                res_vector[i] += block_vector[p] * key[p][i];
+            // Деление текста на блоки:
+            if (current_length == block_size) {
+                blocks.push_back(current_block);
+                current_block = symbol;
+                current_length = 1;
+            }
+            else {
+                current_block += symbol;
+                current_length += 1;
             }
         }
 
-        // Берем остаток от деления матрицы на 37 (длина алфавита):
-        for (int i = 0; i < 5; i++) {
-            res_vector[i] = res_vector[i] % 37;
+        // Если остался не заполненный до конца блок, добавляем пробелы.
+        if (!current_block.empty()) {
+            int r = block_size - (str.length() % block_size);
+            for (int k = 0; k < r; k++) {
+                current_block += " ";
+            }
+            blocks.push_back(current_block);
         }
 
-        // Декодируем полученный вектор:
-        for (int i = 0; i < 5; i++) {
-            result += Alph[res_vector[i]];
+        // Шифрование каждого блока:
+        for (string block : blocks) {
+            // Преобразуем блок в вектор:
+            vector<int> block_vector;
+            for (int j = 0; j < block.size(); j++) {
+                int int_symbol = HillAlphabet[block[j]];
+                block_vector.push_back(int_symbol);
+            }
+
+            // Умножаем вектор на матрицу-ключ:
+            vector<int> res_vector = { 0,0,0,0,0 };
+            for (int i = 0; i < 5; i++) {
+                for (int p = 0; p < 5; p++) {
+                    res_vector[i] += block_vector[p] * key[p][i];
+                }
+            }
+
+            // Берем остаток от деления матрицы на 37 (длина алфавита):
+            for (int i = 0; i < 5; i++) {
+                res_vector[i] = res_vector[i] % 37;
+            }
+
+            // Декодируем полученный вектор:
+            for (int i = 0; i < 5; i++) {
+                result += Alph[res_vector[i]];
+            }
         }
     }
 
     return result; // Возвращаем результат.
 }
 
-string encrypt(const std::string& input, int key) {
+
+// Простейший пример блочного шифрования (его удаляем):
+const int BLOCK_SIZE = 5; // Определим размер блока. Каждый в своем методе сам прописывает input для количества блоков
+
+map<char, string> MorseCode() {
+    return {
+        {'A', ".-"}, {'B', "-..."}, {'C', "-.-."}, {'D', "-.."}, {'E', "."},
+        {'F', "..-."}, {'G', "--."}, {'H', "...."}, {'I', ".."}, {'J', ".---"},
+        {'K', "-.-"}, {'L', ".-.."}, {'M', "--"}, {'N', "-."}, {'O', "---"},
+        {'P', ".--."}, {'Q', "--.-"}, {'R', ".-."}, {'S', "..."}, {'T', "-"},
+        {'U', "..-"}, {'V', "...-"}, {'W', ".--"}, {'X', "-..-"}, {'Y', "-.--"},
+        {'Z', "--.."},
+
+        {'0', "-----"}, {'1', ".----"}, {'2', "..---"}, {'3', "...--"}, {'4', "....-"},
+        {'5', "....."}, {'6', "-...."}, {'7', "--..."}, {'8', "---.."}, {'9', "----."},
+
+        {' ', "!"}
+    };
+}
+
+string MorseBlock(vector<string>& tet) {
+    map<char, string> morseCode = MorseCode();
+    stringstream morseStream;
+    string currentBlock;
+    int currentLength = 0;
+
+    for (const string& str : tet) { // Изменено: обходим каждую строку в векторе
+        for (char ch : str) { // Изменено: обходим каждый символ в строке
+            ch = toupper(ch);
+            if (morseCode.find(ch) != morseCode.end()) {
+                string morseSymbol = morseCode[ch];
+                int symbolLength = morseSymbol.length();
+
+                if (currentLength + symbolLength > BLOCK_SIZE) {
+                    morseStream << currentBlock << "|";
+                    currentBlock = morseSymbol;
+                    currentLength = symbolLength;
+                }
+                else {
+                    currentBlock += morseSymbol;
+                    currentLength += symbolLength;
+                }
+            }
+        }
+    }
+
+    if (!currentBlock.empty()) {
+        morseStream << currentBlock;
+    }
+    return morseStream.str();
+}
+
+// Функция для шифрования текста
+string encrypt(const string& input, int key) {
     // Определяем количество строк
     int rows = (input.size() + key - 1) / key; // Округление вверх
-    std::vector<std::string> grid(rows, std::string(key, ' '));
+    vector<string> grid(rows, string(key, ' '));
 
     // Заполняем сетку
     for (size_t i = 0; i < input.size(); ++i) {
@@ -113,7 +171,7 @@ string encrypt(const std::string& input, int key) {
     }
 
     // Читаем по столбцам
-    std::string output;
+    string output;
     for (int col = 0; col < key; ++col) {
         for (int row = 0; row < rows; ++row) {
             if (grid[row][col] != ' ') { // Пропускаем пустые символы
@@ -125,39 +183,208 @@ string encrypt(const std::string& input, int key) {
     return output; // Возвращаем зашифрованный текст
 }
 
+// Функция для преобразования вектора строк в одну строку
+string vectorToString(const vector<string>& vec) {
+    string result;
+    for (const auto& str : vec) {
+        result += str;
+    }
+    return result;
+}
+
+// Функция Mamaev, принимающая вектор строк
+string Mamaev(const vector<string>& text) {
+    int key;
+    cout << "key: ";
+    cin >> key;
+    vector<string> results;
+
+    // Преобразуем вектор строк в одну строку
+    string inputText = vectorToString(text);
+
+    // Шифруем текст
+    auto start1 = chrono::high_resolution_clock::now();
+    string encryptedText = encrypt(inputText, key);
+    auto end1 = chrono::high_resolution_clock::now();
+    auto lag1 = chrono::duration_cast<chrono::milliseconds>(end1 - start1).count();
+    cout << "Encrypted text:\n" << encryptedText << endl;
+    results.push_back("Encrypting time: " + to_string(lag1) + " ms");
+    for (const auto& result : results) {
+        cout << result << endl;
+    }
+
+
+    return encryptedText;
+}
+
+
+
+// Функцию main и DisplayMenu не удалять! Вместо своей фамилии добавть название своего метода
+void DisplayMenu() { // создаем меню для выбора действий
+    cout << "__________________(-_-)_/_________________" << endl;
+    cout << "                   Menu:          " << endl;
+    cout << " 0) Exit the program           " << endl;
+    cout << " 1) The transposition cipher                   " << endl;
+    cout << " 2) Saburova                  " << endl;
+    cout << " 3) Hill cipher                   " << endl;
+    cout << " 4) Shklyaeva                   " << endl;
+    cout << " 5) Govorukhina                   " << endl;
+    cout << "__________________(~_~)_/_________________" << endl;
+}
 
 int main() {
+    bool E = true;
     string filename;
-    cout << "Enter file name, necessarily with .txt: ";// обязательно с указанием расширения .txt, также файл должен находиться в папке проекта
+    string line;
+    int choice;
+    int dataSize = 0;
+    vector<string> results;
+    vector<string> text;
+
+    // ШИФР ХИЛЛА. Ключ:
+    int hill_key[5][5] = {
+        {1,1,2,3,4},
+        {3,1,7,3,1},
+        {1,8,2,6,4},
+        {9,1,6,3,2},
+        {4,9,2,6,4}
+    };
+
+    cout << "Enter file name, necessarily with .txt: "; // обязательно с указанием расширения .txt, также файл должен находиться в папке проекта
     getline(cin, filename);
 
     ifstream inputFile(filename);
 
     if (!inputFile) {
         cerr << "Error opening file: " << filename << endl;
-        return 1; // Завершаем программу если файл не открывается
+        return 1;
     }
 
-    string line;
-    while (getline(inputFile, line)) { // Читаем файл построчно
-        string morseText = encrypt(line, 2); // Шифруем
-        cout << "Source: " << line << endl; // Исходный текст:
-        cout << "Encrypted text in Morse code: " << morseText << endl; // Зашифрованный текст:
-
-        // ШИФР ХИЛЛА. Ключ:
-        int hill_key[5][5] = {
-            {1,1,2,3,4},
-            {3,1,7,3,1},
-            {1,8,2,6,4},
-            {9,1,6,3,2},
-            {4,9,2,6,4}
-        };
-        string HillText = block_encryption_HillCipher(line, hill_key);
-        cout << "HILL CIPHER. Sourse: " << line << endl; // Выводим исходный текст.
-        cout << "Encrypted text in Hill cipher: " << HillText << endl; // Выводим зашифрованный текст.
+    string inputText;
+    while (getline(inputFile, line)) {
+        inputText += line + '\n'; // Добавляем новую строку
+        text.push_back(line); // Добавляем строку в вектор text
     }
-
     inputFile.close();
-    return 0;
 
+
+    auto start2 = chrono::high_resolution_clock::now();
+    /*Saburova(text)*/; // поменять название функции и разкоментить, text оставить
+    auto end2 = chrono::high_resolution_clock::now();
+    auto lag2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
+
+    auto start3 = chrono::high_resolution_clock::now();
+    volkova(text, hill_key); 
+    auto end3 = chrono::high_resolution_clock::now();
+    auto lag3 = chrono::duration_cast<chrono::milliseconds>(end3 - start3).count();
+
+    auto start4 = chrono::high_resolution_clock::now();
+    /*Shklyaeva(text)*/; // поменять название функции и разкоментить, text оставить
+    auto end4 = chrono::high_resolution_clock::now();
+    auto lag4 = chrono::duration_cast<chrono::milliseconds>(end4 - start4).count();
+
+    auto start5 = chrono::high_resolution_clock::now();
+    /*Govorukhina(text)*/; // поменять название функции и разкоментить, text оставить
+    auto end5 = chrono::high_resolution_clock::now();
+    auto lag5 = chrono::duration_cast<chrono::milliseconds>(end5 - start5).count();
+
+    while (E) {
+        DisplayMenu();
+        cout << "Choose the action: ";
+        cin >> choice;
+        cin.ignore(); // Игнорируем символ новой строки после ввода числа
+
+        if (cin.fail() || choice < 0 || choice > 5) {
+            cout << "Not true number" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        switch (choice) {
+        case 0:
+            E = false;
+            break;
+        case 1:
+            cout << "Source: " << inputText << endl; // Выводим исходный текст
+            Mamaev(text); // Вызываем функцию Mamaev с передачей вектора text
+            break;
+        case 2:
+            /*Saburova(text);*/ // поменять название функции и разкоментить, text оставить
+
+            cout << "Source: "; // это выводит изначальный текст
+            for (size_t i = 0; i < text.size(); ++i) {
+                cout << text[i];
+                if (i < text.size() - 1) {
+                    cout << " ";
+                }
+            }
+            cout << endl;
+
+            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст и разкоментить, поменять название функции
+
+            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag2) + " ms");
+            for (const auto& result : results) {
+                cout << result << endl;
+            }
+            break;
+        case 3:
+            volkova(text, hill_key);
+
+            cout << "Source: "; // это выводит изначальный текст
+            for (size_t i = 0; i < text.size(); ++i) {
+                cout << text[i];
+                if (i < text.size() - 1) {
+                    cout << " ";
+                }
+            }
+            cout << endl;
+
+            cout << "Encrypted text in Morse code: " << volkova(text, hill_key) << endl;
+
+            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag3) + " ms");
+            for (const auto& result : results) {
+                cout << result << endl;
+            }
+            break;
+        case 4:
+            /*Shklyaeva(text);*/ // поменять название функции и разкоментить, text оставить
+
+            cout << "Source: "; // это выводит изначальный текст
+            for (size_t i = 0; i < text.size(); ++i) {
+                cout << text[i];
+                if (i < text.size() - 1) {
+                    cout << " ";
+                }
+            }
+            cout << endl;
+
+            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст, поменять название функции
+
+            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag4) + " ms");
+            for (const auto& result : results) {
+                cout << result << endl;
+            }
+            break;
+        case 5:
+            /*Govorukhina(text);*/ // поменять название функции и разкоментить, text оставить
+
+            cout << "Source: "; // это выводит изначальный текст
+            for (size_t i = 0; i < text.size(); ++i) {
+                cout << text[i];
+                if (i < text.size() - 1) {
+                    cout << " ";
+                }
+            }
+            cout << endl;
+
+            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст, поменять название функции
+
+            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag5) + " ms");
+            for (const auto& result : results) {
+                cout << result << endl;
+            }
+            break;
+        }
+    }
 }

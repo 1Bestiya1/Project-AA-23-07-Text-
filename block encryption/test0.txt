@@ -1,2 +1,1 @@
-5 cats and
-5 dogs
+cats andf dogs

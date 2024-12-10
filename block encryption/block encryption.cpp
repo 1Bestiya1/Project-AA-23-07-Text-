@@ -96,17 +96,27 @@ string Mamaev(const vector<string>& text) {
     int key;
     cout << "key: ";
     cin >> key;
+    vector<string> results;
 
     // Преобразуем вектор строк в одну строку
     string inputText = vectorToString(text);
 
     // Шифруем текст
+    auto start1 = chrono::high_resolution_clock::now();
     string encryptedText = encrypt(inputText, key);
+    auto end1 = chrono::high_resolution_clock::now();
+    auto lag1 = chrono::duration_cast<chrono::milliseconds>(end1 - start1).count();
+    cout << "Encrypted text:\n" << encryptedText << endl;
+    results.push_back("Encrypting time: " + to_string(lag1) + " ms");
+    for (const auto& result : results) {
+        cout << result << endl;
+    }
 
-    cout << "New text:\n" << encryptedText << endl;
 
     return encryptedText;
 }
+
+
 
 // Функцию main и DisplayMenu не удалять! Вместо своей фамилии добавть название своего метода
 void DisplayMenu() { // создаем меню для выбора действий
@@ -147,11 +157,6 @@ int main() {
     }
     inputFile.close();
 
-    // Здесь я запускаю счетчик времени, чтобы понять за какое количество времени производится шифровка (к сожалению в case не запихнуть) вы должны поменять названия функций вместо фамилий
-    auto start1 = chrono::high_resolution_clock::now();
-    MorseBlock(text); // поменять название функции и разкоментить, text оставить
-    auto end1 = chrono::high_resolution_clock::now();
-    auto lag1 = chrono::duration_cast<chrono::milliseconds>(end1 - start1).count();
 
     auto start2 = chrono::high_resolution_clock::now();
     /*Saburova(text)*/; // поменять название функции и разкоментить, text оставить
@@ -193,11 +198,6 @@ int main() {
         case 1:
             cout << "Source: " << inputText << endl; // Выводим исходный текст
             Mamaev(text); // Вызываем функцию Mamaev с передачей вектора text
-
-            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag1) + " ms");
-            for (const auto& result : results) {
-                cout << result << endl;
-            }
             break;
         case 2:
             /*Saburova(text);*/ // поменять название функции и разкоментить, text оставить

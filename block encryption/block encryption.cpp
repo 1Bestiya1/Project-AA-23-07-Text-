@@ -340,7 +340,7 @@ int main() {
             }
             cout << endl;
 
-            cout << "Encrypted text in Morse code: " << volkova(text, hill_key) << endl;
+            cout << "Encrypted text in Hill cipher: " << volkova(text, hill_key) << endl;
 
             results.push_back("File: " + filename + " Encrypting time: " + to_string(lag3) + " ms");
             for (const auto& result : results) {

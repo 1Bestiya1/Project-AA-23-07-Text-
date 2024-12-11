@@ -500,11 +500,21 @@ std::bitset<8> encrypt(const std::bitset<8>& block, const std::bitset<10>& key) 
 }
 
 string Shklyaeva(const vector<string>& text) {
+    vector<string> results;
     std::bitset<10> key("1010000010");
+    auto start4 = chrono::high_resolution_clock::now();
+
     std::vector<std::bitset<8>> binaryText = textToBinaryBlocks(vectorToString(text));
     string result = "";
     for (const auto& i : binaryText) {
         result = result + encrypt(i, key).to_string();
+    }
+
+    auto end4 = chrono::high_resolution_clock::now();
+    auto lag4 = chrono::duration_cast<chrono::milliseconds>(end4 - start4).count();
+    results.push_back("Encrypting time: " + to_string(lag4) + " ms");
+    for (const auto& result1 : results) {
+        cout << result1 << endl;
     }
     return result;
 }
@@ -567,13 +577,6 @@ int main() {
     auto end3 = chrono::high_resolution_clock::now();
     auto lag3 = chrono::duration_cast<chrono::milliseconds>(end3 - start3).count();
 
-    auto start4 = chrono::high_resolution_clock::now();
-    Shklyaeva(text);
-    auto end4 = chrono::high_resolution_clock::now();
-    auto lag4 = chrono::duration_cast<chrono::milliseconds>(end4 - start4).count();
-
-
-
     while (E) {
         DisplayMenu();
         cout << "Choose the action: ";
@@ -635,7 +638,7 @@ int main() {
             }
             break;
         case 4:
-            Shklyaeva(text);
+            
             cout << "Source: "; // это выводит изначальный текст
             for (size_t i = 0; i < text.size(); ++i) {
                 cout << text[i];
@@ -647,10 +650,7 @@ int main() {
 
             cout << "Encrypted text in DES code: " << Shklyaeva(text) << endl; // выводит зашифрованный текст, поменять название функции
 
-            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag4) + " ms");
-            for (const auto& result : results) {
-                cout << result << endl;
-            }
+            
             break;
         case 5:
 

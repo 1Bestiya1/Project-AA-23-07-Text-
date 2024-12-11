@@ -5,9 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <chrono>
-
 using namespace std;
-
 
 // ШИФР ХИЛЛА
 // Создаем алфавит.
@@ -107,7 +105,6 @@ string volkova(vector<string> text, int key[5][5]) {
     return result; // Возвращаем результат.
 }
 
-
 // Простейший пример блочного шифрования (его удаляем):
 const int BLOCK_SIZE = 5; // Определим размер блока. Каждый в своем методе сам прописывает input для количества блоков
 
@@ -159,6 +156,165 @@ string MorseBlock(vector<string>& tet) {
     return morseStream.str();
 }
 
+// Квадрат Полибия для шифра Bifid
+const string POLYBIUS_SQUARE = "ABCDEFGHIKLMNOPQRSTUVWXYZ"; // Без буквы J
+
+// Функция для создания ключа
+string generateKey(const string& key) {
+    string uniqueKey;
+    map<char, bool> usedChars;
+
+    for (char c : key) {
+        c = toupper(c);
+        if (c == 'J') c = 'I'; // Заменяем J на I
+        if (c >= 'A' && c <= 'Z' && !usedChars[c]) {
+            uniqueKey += c;
+            usedChars[c] = true;
+        }
+    }
+
+    // Добавляем оставшиеся символы из квадрата Полибия
+    for (char c : POLYBIUS_SQUARE) {
+        if (!usedChars[c]) {
+            uniqueKey += c;
+        }
+    }
+
+    return uniqueKey;
+}
+
+// Функция для преобразования вектора строк в одну строку
+string vectorToString(const vector<string>& vec) {
+    string result;
+    for (const auto& str : vec) {
+        result += str;
+    }
+    return result;
+}
+
+// Функция для разделения строки на строки заданной длины
+vector<string> splitString(const string& str, size_t lineLength) {
+    vector<string> result;
+    for (size_t i = 0; i < str.size(); i += lineLength) {
+        result.push_back(str.substr(i, lineLength));
+    }
+    return result;
+}
+
+// Функция для шифрования текста
+vector<string> bifidEncrypt(const vector<string>& plaintextLines, const string& key) {
+    string normalizedText;
+    for (const string& line : plaintextLines) {
+        for (char c : line) {
+            c = toupper(c);
+            if (c == 'J') c = 'I'; // Заменяем J на I
+            if (c >= 'A' && c <= 'Z') {
+                normalizedText += c;
+            }
+        }
+    }
+
+    string polybiusKey = generateKey(key);
+    map<char, pair<int, int>> polybiusMap;
+
+    // Создаем карту для квадрата Полибия
+    for (int i = 0; i < polybiusKey.size(); ++i) {
+        polybiusMap[polybiusKey[i]] = { i / 5 + 1, i % 5 + 1 };
+    }
+
+    // Преобразуем текст в пары чисел
+    vector<int> rowNumbers, colNumbers;
+    for (char c : normalizedText) {
+        rowNumbers.push_back(polybiusMap[c].first);
+        colNumbers.push_back(polybiusMap[c].second);
+    }
+
+    // Объединяем строки и столбцы
+    vector<int> combinedNumbers;
+    combinedNumbers.insert(combinedNumbers.end(), rowNumbers.begin(), rowNumbers.end());
+    combinedNumbers.insert(combinedNumbers.end(), colNumbers.begin(), colNumbers.end());
+
+    // Преобразуем числа обратно в символы
+    string ciphertext;
+    for (size_t i = 0; i < combinedNumbers.size(); i += 2) {
+        int row = combinedNumbers[i];
+        int col = combinedNumbers[i + 1];
+        char c = polybiusKey[(row - 1) * 5 + (col - 1)];
+        ciphertext += c;
+    }
+
+    // Разбиваем зашифрованный текст на строки
+    size_t lineLength = plaintextLines[0].size(); // Предполагаем, что все строки одинаковой длины
+    return splitString(ciphertext, lineLength);
+}
+
+// Функция для дешифрования текста
+vector<string> bifidDecrypt(const vector<string>& ciphertextLines, const string& key) {
+    string ciphertext = vectorToString(ciphertextLines);
+
+    string polybiusKey = generateKey(key);
+    map<char, pair<int, int>> polybiusMap;
+
+    // Создаем карту для квадрата Полибия
+    for (int i = 0; i < polybiusKey.size(); ++i) {
+        polybiusMap[polybiusKey[i]] = { i / 5 + 1, i % 5 + 1 };
+    }
+
+    // Преобразуем текст в пары чисел
+    vector<int> combinedNumbers;
+    for (char c : ciphertext) {
+        combinedNumbers.push_back(polybiusMap[c].first);
+        combinedNumbers.push_back(polybiusMap[c].second);
+    }
+
+    // Разделяем числа на строки и столбцы
+    vector<int> rowNumbers, colNumbers;
+    for (size_t i = 0; i < combinedNumbers.size() / 2; ++i) {
+        rowNumbers.push_back(combinedNumbers[i]);
+        colNumbers.push_back(combinedNumbers[i + combinedNumbers.size() / 2]);
+    }
+
+    // Преобразуем числа обратно в символы
+    string plaintext;
+    for (size_t i = 0; i < rowNumbers.size(); ++i) {
+        int row = rowNumbers[i];
+        int col = colNumbers[i];
+        char c = polybiusKey[(row - 1) * 5 + (col - 1)];
+        plaintext += c;
+    }
+
+    // Разбиваем расшифрованный текст на строки
+    size_t lineLength = ciphertextLines[0].size(); // Предполагаем, что все строки одинаковой длины
+    return splitString(plaintext, lineLength);
+}
+
+// Функция Govorukhina, принимающая вектор строк
+string Govorukhina(const vector<string>& text) {
+    string key;
+    cout << "Enter the key (letters only, no spaces): ";
+    cin >> key;
+    vector<string> results;
+
+
+    auto start5 = chrono::high_resolution_clock::now();
+    vector<string> ciphertextLines = bifidEncrypt(text, key);
+    auto end5 = chrono::high_resolution_clock::now();
+    auto lag5 = chrono::duration_cast<chrono::milliseconds>(end5 - start5).count();
+
+    // Шифрование
+    cout << "Encrypted text:" << endl;
+    for (const string& line : ciphertextLines) {
+        cout << line << endl;
+    }
+
+    results.push_back("Encrypting time: " + to_string(lag5) + " ms");
+    for (const auto& result : results) {
+        cout << result << endl;
+    }
+
+    return vectorToString(ciphertextLines);
+}
+
 // Функция для шифрования текста
 string encrypt(const string& input, int key) {
     // Определяем количество строк
@@ -184,7 +340,7 @@ string encrypt(const string& input, int key) {
 }
 
 // Функция для преобразования вектора строк в одну строку
-string vectorToString(const vector<string>& vec) {
+string VTS(const vector<string>& vec) {
     string result;
     for (const auto& str : vec) {
         result += str;
@@ -200,7 +356,7 @@ string Mamaev(const vector<string>& text) {
     vector<string> results;
 
     // Преобразуем вектор строк в одну строку
-    string inputText = vectorToString(text);
+    string inputText = VTS(text);
 
     // Шифруем текст
     auto start1 = chrono::high_resolution_clock::now();
@@ -213,11 +369,8 @@ string Mamaev(const vector<string>& text) {
         cout << result << endl;
     }
 
-
     return encryptedText;
 }
-
-
 
 // Функцию main и DisplayMenu не удалять! Вместо своей фамилии добавть название своего метода
 void DisplayMenu() { // создаем меню для выбора действий
@@ -228,7 +381,7 @@ void DisplayMenu() { // создаем меню для выбора действ
     cout << " 2) Saburova                  " << endl;
     cout << " 3) Hill cipher                   " << endl;
     cout << " 4) Shklyaeva                   " << endl;
-    cout << " 5) Govorukhina                   " << endl;
+    cout << " 5) Bifid cipher                 " << endl;
     cout << "__________________(~_~)_/_________________" << endl;
 }
 
@@ -267,14 +420,13 @@ int main() {
     }
     inputFile.close();
 
-
     auto start2 = chrono::high_resolution_clock::now();
     /*Saburova(text)*/; // поменять название функции и разкоментить, text оставить
     auto end2 = chrono::high_resolution_clock::now();
     auto lag2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
 
     auto start3 = chrono::high_resolution_clock::now();
-    volkova(text, hill_key); 
+    volkova(text, hill_key);
     auto end3 = chrono::high_resolution_clock::now();
     auto lag3 = chrono::duration_cast<chrono::milliseconds>(end3 - start3).count();
 
@@ -283,10 +435,7 @@ int main() {
     auto end4 = chrono::high_resolution_clock::now();
     auto lag4 = chrono::duration_cast<chrono::milliseconds>(end4 - start4).count();
 
-    auto start5 = chrono::high_resolution_clock::now();
-    /*Govorukhina(text)*/; // поменять название функции и разкоментить, text оставить
-    auto end5 = chrono::high_resolution_clock::now();
-    auto lag5 = chrono::duration_cast<chrono::milliseconds>(end5 - start5).count();
+
 
     while (E) {
         DisplayMenu();
@@ -340,7 +489,7 @@ int main() {
             }
             cout << endl;
 
-            cout << "Block size: 5" << endl; 
+            cout << "Block size: 5" << endl;
             cout << "Encrypted text in Hill cipher: " << volkova(text, hill_key) << endl;
 
             results.push_back("File: " + filename + " Encrypting time: " + to_string(lag3) + " ms");
@@ -368,24 +517,12 @@ int main() {
             }
             break;
         case 5:
-            /*Govorukhina(text);*/ // поменять название функции и разкоментить, text оставить
 
-            cout << "Source: "; // это выводит изначальный текст
-            for (size_t i = 0; i < text.size(); ++i) {
-                cout << text[i];
-                if (i < text.size() - 1) {
-                    cout << " ";
-                }
-            }
-            cout << endl;
 
-            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст, поменять название функции
-
-            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag5) + " ms");
-            for (const auto& result : results) {
-                cout << result << endl;
-            }
+            cout << "Source: " << inputText << endl; // Выводим исходный текст
+            Govorukhina(text); // Вызываем функцию Govorukhina с передачей вектора text
             break;
+
         }
     }
 }

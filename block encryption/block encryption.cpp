@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fstream>
 #include <chrono>
+#include <bitset>
 using namespace std;
 
 // ШИФР ХИЛЛА
@@ -372,6 +373,142 @@ string Mamaev(const vector<string>& text) {
     return encryptedText;
 }
 
+// Перестановки и S-блоки
+const int P10[10] = { 2, 4, 1, 6, 3, 9, 5, 8, 7, 0 };
+const int P8[8] = { 5, 2, 6, 3, 7, 4, 9, 8 };
+const int IP[8] = { 1, 5, 2, 0, 3, 6, 7, 4 };
+const int IP_INV[8] = { 3, 0, 2, 4, 6, 1, 7, 5 };
+const int E[8] = { 3, 0, 1, 2, 1, 2, 3, 0 };
+const int S0[4][4] = {
+    {1, 0, 3, 2},
+    {3, 2, 1, 0},
+    {0, 2, 1, 3},
+    {2, 1, 0, 3}
+};
+const int S1[4][4] = {
+    {0, 1, 2, 3},
+    {2, 0, 1, 3},
+    {3, 0, 1, 0},
+    {2, 1, 0, 3}
+};
+
+std::vector<std::bitset<8>> textToBinaryBlocks(const std::string& text) {
+    std::vector<std::bitset<8>> binaryBlocks;
+
+    // Преобразуем каждый символ в двоичный код
+    for (char ch : text) {
+        std::bitset<8> binaryChar(ch);
+        binaryBlocks.push_back(binaryChar);
+    }
+
+    // Проверяем последний блок
+    if (!binaryBlocks.empty()) {
+        // Если последний блок меньше 8 бит, дополняем его
+        std::bitset<8> lastBlock = binaryBlocks.back();
+        if (text.size() % 8 != 0) {
+            int bitsToAdd = 8 - (text.size() % 8);
+            for (int i = 0; i < bitsToAdd; ++i) {
+                lastBlock[7 - i] = 0; // Дополняем нулями слева
+            }
+            binaryBlocks.back() = lastBlock; // Обновляем последний блок
+        }
+    }
+    return binaryBlocks;
+}
+
+std::bitset<10> permute1010(const std::bitset<10>& input, const int* perm, int size) {
+    std::bitset<10> output;
+    for (int i = 0; i < size; ++i) {
+        output[i] = input[perm[i]];
+    }
+    return output;
+}
+
+std::bitset<8> permute88(const std::bitset<8>& input, const int* perm, int size) {
+    std::bitset<8> output;
+    for (int i = 0; i < size; ++i) {
+        output[i] = input[perm[i]];
+    }
+    return output;
+}
+
+std::bitset<8> permute108(const std::bitset<10>& input, const int* perm, int size) {
+    std::bitset<8> output;
+    for (int i = 0; i < size; ++i) {
+        output[i] = input[perm[i]];
+    }
+    return output;
+}
+
+// Функция для генерации ключей
+std::bitset<8> generateKeys(const std::bitset<10>& key, int number) {
+    std::bitset<8> keys;
+    std::bitset<10> permutedKey = permute1010(key, P10, 10);
+
+    // Разделяем ключ на две части
+    std::bitset<5> left(permutedKey.to_string().substr(0, 5));
+    std::bitset<5> right(permutedKey.to_string().substr(5, 5));
+
+    for (int i = 0; i < number; ++i) {
+        // Сдвиг влево
+        left = bitset<5>(left.to_string().substr(1) + left.to_string().substr(0, 1));
+        right = bitset<5>(right.to_string().substr(1) + right.to_string().substr(0, 1));
+
+        // Генерация ключа
+        std::bitset<8> keys = permute108(bitset<10>(left.to_string() + right.to_string()), P8, 8);;
+    }
+
+    return keys;
+}
+
+// Функция для S-блока
+std::bitset<2> sBlock(const std::bitset<4>& input, const int s[4][4]) {
+    int row = int(input[0]) * int(input[0]) + int(input[3]);
+    int col = int(input[1]) * int(input[1]) + int(input[2]);
+    return std::bitset<2>(s[row][col]);
+}
+
+// Функция F
+std::bitset<4> fFunction(const std::bitset<4>& right, const std::bitset<8>& key) {
+    std::bitset<8> expanded;
+    for (int i = 0; i < 8; ++i) {
+        expanded[i] = right[E[i]];
+    }
+
+    expanded ^= key; // XOR с ключом
+
+    std::bitset<2> left = sBlock(bitset<4>(expanded.to_string().substr(0, 4)), S0);
+    std::bitset<2> rightS = sBlock(bitset<4>(expanded.to_string().substr(4, 4)), S1);
+    return bitset<4>(left.to_string() + rightS.to_string());
+}
+
+// Шифрование блока
+std::bitset<8> encrypt(const std::bitset<8>& block, const std::bitset<10>& key) {
+    std::bitset<8> permutedBlock = permute88(block, IP, 8);
+    std::bitset<4> left = bitset<4>(permutedBlock.to_string().substr(0, 4));
+    std::bitset<4> right = bitset<4>(permutedBlock.to_string().substr(4, 4));
+
+    std::bitset<4> temp = right;
+    left ^= fFunction(right, generateKeys(key, 1));
+    left = temp;
+    temp = right;
+    right = left ^ fFunction(right, generateKeys(key, 2));
+    left = temp;
+
+    std::bitset<8> combined = bitset<8>(right.to_string() + left.to_string());
+    return permute88(combined, IP_INV, 8);
+}
+
+string Shklyaeva(const vector<string>& text) {
+    std::bitset<10> key("1010000010");
+    std::vector<std::bitset<8>> binaryText = textToBinaryBlocks(vectorToString(text));
+    string result = "";
+    for (const auto& i : binaryText) {
+        result = result + encrypt(i, key).to_string();
+    }
+    return result;
+}
+
 // Функцию main и DisplayMenu не удалять! Вместо своей фамилии добавть название своего метода
 void DisplayMenu() { // создаем меню для выбора действий
     cout << "__________________(-_-)_/_________________" << endl;
@@ -431,7 +568,7 @@ int main() {
     auto lag3 = chrono::duration_cast<chrono::milliseconds>(end3 - start3).count();
 
     auto start4 = chrono::high_resolution_clock::now();
-    /*Shklyaeva(text)*/; // поменять название функции и разкоментить, text оставить
+    Shklyaeva(text);
     auto end4 = chrono::high_resolution_clock::now();
     auto lag4 = chrono::duration_cast<chrono::milliseconds>(end4 - start4).count();
 
@@ -498,8 +635,7 @@ int main() {
             }
             break;
         case 4:
-            /*Shklyaeva(text);*/ // поменять название функции и разкоментить, text оставить
-
+            Shklyaeva(text);
             cout << "Source: "; // это выводит изначальный текст
             for (size_t i = 0; i < text.size(); ++i) {
                 cout << text[i];
@@ -509,7 +645,7 @@ int main() {
             }
             cout << endl;
 
-            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст, поменять название функции
+            cout << "Encrypted text in DES code: " << Shklyaeva(text) << endl; // выводит зашифрованный текст, поменять название функции
 
             results.push_back("File: " + filename + " Encrypting time: " + to_string(lag4) + " ms");
             for (const auto& result : results) {

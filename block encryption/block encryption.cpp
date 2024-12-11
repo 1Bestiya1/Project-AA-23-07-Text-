@@ -296,26 +296,17 @@ string Govorukhina(const vector<string>& text) {
     vector<string> results;
 
 
-
-    //// Дешифрование
-    //vector<string> decryptedTextLines = bifidDecrypt(ciphertextLines, key);
-    //cout << "Decrypted text:" << endl;
-    //for (const string& line : decryptedTextLines) {
-    //    cout << line << endl;
-    //}
-
     auto start5 = chrono::high_resolution_clock::now();
-    // Govorukhina(text); // поменять название функции и разкоментить, text оставить
-    
-    // Шифрование
     vector<string> ciphertextLines = bifidEncrypt(text, key);
+    auto end5 = chrono::high_resolution_clock::now();
+    auto lag5 = chrono::duration_cast<chrono::milliseconds>(end5 - start5).count();
+
+    // Шифрование
     cout << "Encrypted text:" << endl;
     for (const string& line : ciphertextLines) {
         cout << line << endl;
     }
 
-    auto end5 = chrono::high_resolution_clock::now();
-    auto lag5 = chrono::duration_cast<chrono::milliseconds>(end5 - start5).count();
     results.push_back("Encrypting time: " + to_string(lag5) + " ms");
     for (const auto& result : results) {
         cout << result << endl;
@@ -390,7 +381,7 @@ void DisplayMenu() { // создаем меню для выбора действ
     cout << " 2) Saburova                  " << endl;
     cout << " 3) Hill cipher                   " << endl;
     cout << " 4) Shklyaeva                   " << endl;
-    cout << " 5) Govorukhina                   " << endl;
+    cout << " 5) Bifid cipher                 " << endl;
     cout << "__________________(~_~)_/_________________" << endl;
 }
 

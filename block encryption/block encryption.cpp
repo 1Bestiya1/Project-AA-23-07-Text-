@@ -519,6 +519,121 @@ string Shklyaeva(const vector<string>& text) {
     return result;
 }
 
+
+
+
+// Функция для преобразования строки ключа в вектор чисел
+vector<int> parseKey(const string& keyString) {
+    vector<int> key;
+    for (char c : keyString) {
+        if (isalpha(c)) {
+            // Преобразуем букву в число (A=0, B=1, ..., Z=25)
+            key.push_back(toupper(c) - 'A');
+        }
+    }
+    return key;
+}
+
+// Функция для шифрования текста с использованием шифра Виженера
+string vigenereEncrypt(const string& plaintext, const vector<int>& key) {
+    string ciphertext;
+    int keyLength = key.size();
+
+    for (size_t i = 0; i < plaintext.length(); ++i) {
+        char c = plaintext[i];
+
+        // Проверяем, является ли символ буквой
+        if (isalpha(c)) {
+            // Преобразуем в верхний регистр
+            char base = isupper(c) ? 'A' : 'a';
+            // Шифруем символ
+            char encryptedChar = (c - base + key[i % keyLength]) % 26 + base;
+            ciphertext += encryptedChar;
+        }
+        else {
+            // Если символ не является буквой, оставляем его без изменений
+            ciphertext += c;
+        }
+    }
+
+    return ciphertext;
+}
+
+// Функция для дешифрования текста с использованием шифра Виженера
+string vigenereDecrypt(const string& ciphertext, const vector<int>& key) {
+    string plaintext;
+    int keyLength = key.size();
+
+    for (size_t i = 0; i < ciphertext.length(); ++i) {
+        char c = ciphertext[i];
+
+        // Проверяем, является ли символ буквой
+        if (isalpha(c)) {
+            // Преобразуем в верхний регистр
+            char base = isupper(c) ? 'A' : 'a';
+            // Дешифруем символ
+            char decryptedChar = (c - base - key[i % keyLength] + 26) % 26 + base;
+            plaintext += decryptedChar;
+        }
+        else {
+            // Если символ не является буквой, оставляем его без изменений
+            plaintext += c;
+        }
+    }
+
+    return plaintext;
+}
+
+// Функция для преобразования вектора строк в одну строку
+string vector_String(const vector<string>& vec) {
+    string result;
+    for (const auto& str : vec) {
+        result += str;
+    }
+    return result;
+}
+
+// Функция Saburova, принимающая вектор строк и запрашивающая ключ у пользователя
+string Saburova(const vector<string>& text) {
+    // Преобразуем вектор строк в одну строку
+    string plaintext = vector_String(text);
+    vector<string> results;
+
+
+    // Запрашиваем ключ у пользователя
+    string keyString;
+    cout << "Enter the key (letters only): ";
+    cin >> keyString;
+
+    // Преобразуем строку ключа в вектор чисел
+    vector<int> key = parseKey(keyString);
+
+    // Проверяем, что ключ не пустой
+    if (key.empty()) {
+        cerr << "Error: Key cannot be empty." << endl;
+        return "";
+    }
+
+    // Шифрование
+
+
+    auto start2 = chrono::high_resolution_clock::now();
+    string ciphertext = vigenereEncrypt(plaintext, key);
+    auto end2 = chrono::high_resolution_clock::now();
+    auto lag2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
+    cout << "Encrypted: " << ciphertext << endl;
+    results.push_back("Encrypting time: " + to_string(lag2) + " ms");
+    for (const auto& result : results) {
+        cout << result << endl;
+    }
+
+
+    return ciphertext;
+}
+
+
+
+
 // Функцию main и DisplayMenu не удалять! Вместо своей фамилии добавть название своего метода
 void DisplayMenu() { // создаем меню для выбора действий
     cout << "__________________(-_-)_/_________________" << endl;
@@ -599,8 +714,6 @@ int main() {
             Mamaev(text); // Вызываем функцию Mamaev с передачей вектора text
             break;
         case 2:
-            /*Saburova(text);*/ // поменять название функции и разкоментить, text оставить
-
             cout << "Source: "; // это выводит изначальный текст
             for (size_t i = 0; i < text.size(); ++i) {
                 cout << text[i];
@@ -608,14 +721,7 @@ int main() {
                     cout << " ";
                 }
             }
-            cout << endl;
-
-            cout << "Encrypted text in Morse code: " << MorseBlock(text) << endl; // выводит зашифрованный текст и разкоментить, поменять название функции
-
-            results.push_back("File: " + filename + " Encrypting time: " + to_string(lag2) + " ms");
-            for (const auto& result : results) {
-                cout << result << endl;
-            }
+            cout << endl;            Saburova(text); // поменять название функции и разкоментить, text оставить
             break;
         case 3:
             volkova(text, hill_key);

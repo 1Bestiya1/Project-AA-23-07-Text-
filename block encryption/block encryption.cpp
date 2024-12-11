@@ -517,7 +517,7 @@ void DisplayMenu() { // создаем меню для выбора действ
     cout << " 1) The transposition cipher                   " << endl;
     cout << " 2) Saburova                  " << endl;
     cout << " 3) Hill cipher                   " << endl;
-    cout << " 4) Shklyaeva                   " << endl;
+    cout << " 4) DES cipher                   " << endl;
     cout << " 5) Bifid cipher                 " << endl;
     cout << "__________________(~_~)_/_________________" << endl;
 }

@@ -559,31 +559,6 @@ string vigenereEncrypt(const string& plaintext, const vector<int>& key) {
     return ciphertext;
 }
 
-// Функция для дешифрования текста с использованием шифра Виженера
-string vigenereDecrypt(const string& ciphertext, const vector<int>& key) {
-    string plaintext;
-    int keyLength = key.size();
-
-    for (size_t i = 0; i < ciphertext.length(); ++i) {
-        char c = ciphertext[i];
-
-        // Проверяем, является ли символ буквой
-        if (isalpha(c)) {
-            // Преобразуем в верхний регистр
-            char base = isupper(c) ? 'A' : 'a';
-            // Дешифруем символ
-            char decryptedChar = (c - base - key[i % keyLength] + 26) % 26 + base;
-            plaintext += decryptedChar;
-        }
-        else {
-            // Если символ не является буквой, оставляем его без изменений
-            plaintext += c;
-        }
-    }
-
-    return plaintext;
-}
-
 // Функция для преобразования вектора строк в одну строку
 string vector_String(const vector<string>& vec) {
     string result;
@@ -640,7 +615,7 @@ void DisplayMenu() { // создаем меню для выбора действ
     cout << "                   Menu:          " << endl;
     cout << " 0) Exit the program           " << endl;
     cout << " 1) The transposition cipher                   " << endl;
-    cout << " 2) Saburova                  " << endl;
+    cout << " 2) The Vigener cipher                  " << endl;
     cout << " 3) Hill cipher                   " << endl;
     cout << " 4) DES cipher                   " << endl;
     cout << " 5) Bifid cipher                 " << endl;
@@ -681,11 +656,6 @@ int main() {
         text.push_back(line); // Добавляем строку в вектор text
     }
     inputFile.close();
-
-    auto start2 = chrono::high_resolution_clock::now();
-    /*Saburova(text)*/; // поменять название функции и разкоментить, text оставить
-    auto end2 = chrono::high_resolution_clock::now();
-    auto lag2 = chrono::duration_cast<chrono::milliseconds>(end2 - start2).count();
 
     auto start3 = chrono::high_resolution_clock::now();
     volkova(text, hill_key);
